@@ -12,11 +12,10 @@ const hostname = '0.0.0.0'
 const port = process.env.PORT || 8079
 
 app.use(compression())
-app.use(express.static(path.join(__dirname, 'dist')))
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, '.')))
 
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'public', 'test.html'))
+  res.sendFile(path.resolve(__dirname, 'test.html'))
 })
 
 app.listen(port, hostname, () => {

@@ -27,8 +27,12 @@ a:hover {
     -o-transition: all 0.4s ease-in-out;
     transition: all 0.4s ease-in-out;
 }
+[class^="iconcl-"]:before,
+[class*=" iconcl-"]:before {
+    display: block;
+}
 .home footer {
-    margin-top: 0px;
+    margin-top: 20px;
 }
 .bloque-indicador,
 .bloque-indicador-dato {
@@ -572,7 +576,6 @@ header .show .dropdown-toggle i {
     color: #fff;
     margin: 22px 0;
     background-size: contain;
-    width: 100%;
 }
 .input-tags {
     border: 1px solid #fff;
@@ -657,7 +660,6 @@ header .show .dropdown-toggle i {
     -moz-transition: all 0.4s ease-in-out;
     -o-transition: all 0.4s ease-in-out;
     transition: all 0.4s ease-in-out;
-    right: 0;
 }
 .input-tags button:hover {
     color: #fff;
@@ -2056,7 +2058,7 @@ footer .social a:hover {
     .banner {
         height: 180px;
         background-size: cover;
-        background-position: center bottom;
+        background-position: center center;
     }
     .bloque-tags {
         background-size: cover;

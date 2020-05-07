@@ -369,7 +369,7 @@
             ?>
                     <div class="col-12">
                         <div class="bloque-grafica">
-                            <h2>Tasa de crecimiento de ocupados</h2>
+                            <h2>Crecimiento de ocupados</h2>
                             <div class="grafica">
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function () {
@@ -392,7 +392,7 @@
                                                     text: 'Demanda laboral de '+data[0].name_occupation
                                                 },
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
                                                
                                                 xAxis: {
@@ -409,6 +409,12 @@
                                                     },
                                                     title: {
                                                         text: 'Número de Ocupados'
+                                                    },
+                                                    labels: {
+                                                        formatter: function() {
+                                                         // if ( this.value > 100000 ) return Highcharts.numberFormat( this.value/1000, 1) + "l";  // maybe only switch if > 1000
+                                                          return Highcharts.numberFormat(this.value,0);
+                                                        }                
                                                     }
                                                 },
                                                 lang : {
@@ -442,13 +448,20 @@
                                                 },
                                                 tooltip: {
                                                     headerFormat: '<b>{series.name}</b><br />',
-                                                    pointFormat: 'x = {point.x}, y = {point.y}'
+                                                    //pointFormat: 'x = {point.x}, y = {point.y}'
                                                 },
-
+                                                plotOptions: {
+                                                    series: {
+                                                        label: {
+                                                            connectorAllowed: false
+                                                        },
+                                                        pointStart: 0
+                                                    }
+                                                },
                                                 series: [{
                                                     data: data_ocupacion,
                                                     color: '#7fbeda',
-                                                    pointStart: data_ejeX[0],
+                                                    //pointStart: data_ejeX[0],
                                                     name: 'Tasa de crecimiento de ocupados'
                                                 }]
                                             });
@@ -636,6 +649,10 @@
                             <div class="grafica">
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function () {
+                                            Highcharts.setOptions({
+                                                colors: ['#283E56', '#B8366B', '#F1C561', '#F16E4A', '#47617E', '#EE93B8', '#F8D37E', '#F78769', '#6283A7', '#8A4D66', '#E3C889', '#C85F43']
+                                            });
+
                                             Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/participacion_sector/<?php echo $id_occupation; ?>', function (data) {
 
                                             var points = [],
@@ -697,9 +714,9 @@
                                                     regionI = regionI + 1;
                                                 }
                                             }
-
+                                            
                                             //console.log(points);
-                                            var myChart4 = Highcharts.chart('chartdiv5', {
+                                            Highcharts.chart('chartdiv5', {
                                                 series: [{
                                                     type: 'treemap',
                                                     drillUpButton: {
@@ -719,6 +736,8 @@
                                                         },
                                                         borderWidth: 3
                                                     }],
+                                                    colors: ['#283E56', '#B8366B', '#F1C561', '#F16E4A'],
+
                                                     name: '% de participación',
                                                     //turboThreshold: 0,
                                                     data: points
@@ -778,8 +797,9 @@
                                                     }
                                                 },
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
+
                                                 title: {
                                                     text: 'Participación en distintos sectores'
                                                 },

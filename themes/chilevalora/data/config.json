@@ -1,26 +1,25 @@
 {
   "colors": {
-    "text": {
+   "text": {
       "negative": "#ffffff",
       "low": "#c9cbd1",
       "medium": "#383d4c",
       "high": "#9397a2",
-      "top": "#000d23",
-      "selected": "#ffffff"
+      "top": "#000d23"
     },
     "jobs": "#00edff",
     "skills": "#ffee02",
     "nodigital": "#00FF99",
     "range": [
-      "#00475d",
-      "#0fccd4",
-      "#f2fd95"
+      "#f8ebf0",
+      "#db91ae",
+      "#be366b"
     ],
     "background": "#0a162a",
     "button": "rgba(255, 255, 255, 0.2)",
     "select": {
       "background": "#f5f5f6",
-      "trigger": "rgba(255, 255, 255, 0.16)",
+      "trigger": "rgba(255, 255, 255, 0.08)",
       "color": "#00475d",
       "selected": "rgba(0, 198, 215, 0.2)"
     },

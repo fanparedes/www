@@ -34,6 +34,7 @@ function chilevalora_template () {
 	// Theme stylesheet CSS
 	wp_enqueue_style('chilevalora-style', get_template_directory_uri() . '/css/estilos.css', '', '', 'all');
 	//wp_enqueue_style('chilevalora-style', get_stylesheet_uri());
+	wp_enqueue_style('datepicker-style', get_template_directory_uri() . '/css/bootstrap-datepicker3.min.css', '', '', 'all');
 
 
 	/**
@@ -66,9 +67,13 @@ function chilevalora_template () {
 	wp_enqueue_script('bootstrap-select_js', get_template_directory_uri() . '/js/bootstrap-select.min.js', array('jquery-amsify-suggestags'), '3.3.4');
 
 	//CHARTS JS
-	wp_enqueue_script('highcharts_js', get_template_directory_uri() . '/js/highcharts.js', array('bootstrap-select_js'), '3.3.4');
+	wp_enqueue_script('highstock_js', get_template_directory_uri() . '/js/stock/highstock.js', array('bootstrap-select_js'), '3.3.4');
+	//wp_enqueue_script('highstock_highcharts', get_template_directory_uri() . '/js/stock/highstock_highcharts.js', array('highstock_js'), '3.3.4');
+	wp_enqueue_script('highcharts-more', get_template_directory_uri() . '/js/stock/highcharts-more.js', array('highstock_js'), '3.3.4');
+	
+	//wp_enqueue_script('highcharts_js', get_template_directory_uri() . '/js/highcharts.js', array('highstock_highcharts'), '3.3.4');
 	//
-	wp_enqueue_script('highcharts_data', get_template_directory_uri() . '/js/modules/data.js', array('highcharts_js'), '3.3.4');
+	wp_enqueue_script('highcharts_data', get_template_directory_uri() . '/js/modules/data.js', array('highcharts-more'), '3.3.4');
 	//
 	wp_enqueue_script('highcharts_drilldown', get_template_directory_uri() . '/js/modules/drilldown.js', array('highcharts_data'), '3.3.4');
 	//
@@ -83,6 +88,14 @@ function chilevalora_template () {
 	wp_enqueue_script('highcharts_treemap', get_template_directory_uri() . '/js/modules/treemap.js', array('highcharts_heatmap'), '3.3.4');
 	//
 	wp_enqueue_script('highcharts_sankey', get_template_directory_uri() . '/js/modules/sankey.js', array('highcharts_treemap'), '3.3.4');
+	//
+	
+	wp_enqueue_script('datepicker_js', get_template_directory_uri() . '/js/bootstrap-datepicker.min.js', array('highcharts_sankey'), '3.3.4');
+	wp_enqueue_script('datepickeres_js', get_template_directory_uri() . '/js/bootstrap-datepicker.es.min.js', array('datepicker_js'), '3.3.4');
+	//wp_enqueue_script('highstock_exporting', get_template_directory_uri() . '/js/stock/exporting.js', array('highstock_js'), '3.3.4');
+	//wp_enqueue_script('highstock_data', get_template_directory_uri() . '/js/stock/data.js', array('highcharts_js'), '3.3.4');
+	//wp_enqueue_script('highstock_export_data', get_template_directory_uri() . '/js/stock/export-data.js', array('highcharts_js'), '3.3.4');
+	
 	
 
 	//Ajax JS

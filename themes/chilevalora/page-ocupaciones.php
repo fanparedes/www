@@ -202,7 +202,9 @@
 
                   Promise.all([
                     getData('config.json'),
-                    //getData('digitales.json'),
+                    // getData('digitales.json'),
+                    // getData('habilidades.json'),
+                    // getData('nodigitales.json')
                     getDataR('digitales'),
                     getDataR('habilidades'),
                     getDataR('nodigitales')

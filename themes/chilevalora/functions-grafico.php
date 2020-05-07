@@ -142,7 +142,7 @@ function crecimiento_sectores( $data ) {
                 sec.id_sector,
                 sec.name_sector,
                 ca.ano,
-                ca.mes,
+                (ca.mes-1) as mes,
                 sum(ca.number_workers) as number_workers
             from cl_afc ca
             inner join cl_class clss on (ca.id_subclass = clss.id_class)
@@ -151,14 +151,25 @@ function crecimiento_sectores( $data ) {
             inner join cl_divisions divs on (grp.id_division = divs.id_division)
             inner join cl_sectors sec on (divs.id_sector = sec.id_sector)
             where sec.id_sector = ".$id_sector."
-            
-            group by sec.id_sector, sec.name_sector,ca.ano, ca.mes
-            order by ca.ano asc
-        ";
-
+            group by sec.id_sector, sec.name_sector,ca.ano,ca.mes
+            order by ca.ano, ca.mes asc";
+        //echo $sql;
         $rs = $wpdb->get_results($sql);
+        $array_data = array();
+        if(is_array($rs) && count($rs)>0){
+            foreach ($rs as $row) {
+                $name_sector    = isset($row->name_sector)      && $row->name_sector!=''        ? $row->name_sector : '';
+                $number_workers = isset($row->number_workers)   && $row->number_workers!=''     ? (int) $row->number_workers : '';
+                $ano            = isset($row->ano)              && $row->ano!=''                ? (int) $row->ano : '';
+                $mes            = isset($row->mes)              && $row->mes!=''                ? (int) $row->mes : '';
+                $fecha          = (int) (mktime(0, 0, 0, $mes, 1, $ano)*1000);
 
-        $rs_response = (array) $rs;
+                array_push($array_data, array('name_sector' => $row->name_sector,'fecha' => $fecha, 'value' => $number_workers, 'ano' => $ano, 'mes' => $mes));
+                //array_push($array_data, array('fecha' => $fecha, 'value' => $number_workers));
+            }
+        }
+
+        $rs_response = (array) $array_data;
         return new WP_REST_Response($rs_response, 200);
     }else{
         return new WP_REST_Response(null, 200);
@@ -252,7 +263,7 @@ function contratos_indefinidos_sectores( $data ) {
 
                     array_push($data_old, $variacion);
 
-                    $i = -1;
+                    //$i = -1;
                 }
 
                 $i++;
@@ -666,7 +677,7 @@ function crecimiento_nuevos_trabajadores( $data ) {
             sec.id_sector,
             sec.name_sector,
             ca.ano,
-            (((select sum(seci2.number_people::float) from cl_sector_initiators seci2 where sec.id_sector = seci2.id_sector and ca.ano::int = seci2.ano::int)*100)/sum(ca.number_workers::float)) as porcentaje
+            (((select sum(seci2.number_people::float) from cl_sector_initiators seci2 where sec.id_sector = seci2.id_sector and ca.ano::int = seci2.ano::int)*100)/(select sum(seci3.number_people::float) from cl_sector_initiators seci3)) as porcentaje
         from cl_afc ca
         inner join cl_class clss on (ca.id_subclass = clss.id_class)
         inner join cl_subclass sbca on (clss.id_class = sbca.id_class)
@@ -1040,7 +1051,7 @@ function crecimiento_nuevos_trabajadores_dashboard(  ) {
             sec.id_sector,
             sec.name_sector,
             ca.ano,
-            (((select sum(seci2.number_people::float) from cl_sector_initiators seci2 where sec.id_sector = seci2.id_sector and ca.ano::int = seci2.ano::int)*100)/sum(ca.number_workers::float)) as porcentaje
+            (((select sum(seci2.number_people::float) from cl_sector_initiators seci2 where sec.id_sector = seci2.id_sector and ca.ano::int = seci2.ano::int)*100)/(select sum(seci3.number_people::float) from cl_sector_initiators seci3)) as porcentaje
         from cl_afc ca
         inner join cl_class clss on (ca.id_subclass = clss.id_class)
         inner join cl_subclass sbca on (clss.id_class = sbca.id_class)
@@ -1108,7 +1119,7 @@ function crecimiento_nuevos_trabajadores_dashboard_old(  ) {
             sec.id_sector,
             sec.name_sector,
             ca.ano,
-            (((select sum(seci2.number_people::float) from cl_sector_initiators seci2 where sec.id_sector = seci2.id_sector and ca.ano::int = seci2.ano::int)*100)/sum(ca.number_workers::float)) as porcentaje
+            (((select sum(seci2.number_people::float) from cl_sector_initiators seci2 where sec.id_sector = seci2.id_sector and ca.ano::int = seci2.ano::int)*100)/(select sum(seci3.number_people::float) from cl_sector_initiators seci3)) as porcentaje
         from cl_afc ca
         inner join cl_class clss on (ca.id_subclass = clss.id_class)
         inner join cl_subclass sbca on (clss.id_class = sbca.id_class)
@@ -1453,56 +1464,86 @@ function crecimiento_rotacion_setores_dashboard( $data ) {
     global $wpdb;
 
     
+    $id_sector = isset($data['id_sector']) && $data['id_sector']!='' ? $data['id_sector'] : '';
 
-    
-    $sql = "
+    if(is_numeric($id_sector)){
+        /*$sql = "
         select 
-            distinct
-            cs_ou.id_sector_exit,
-            cs1.name_sector as name_sector_exit,
-            cs_ou.id_sector_input,
-            cs2.name_sector as name_sector_input,
-            (((cs_ou.number_people::float)*100)/(select Sum(number_people::float) from cl_sector_exit_inputs )) as porcentaje,
-            cs_ou.ano
-        from cl_sector_exit_inputs cs_ou 
-        inner join cl_sectors cs1 on (cs_ou.id_sector_exit = cs1.id_sector)
-        inner join cl_sectors cs2 on (cs_ou.id_sector_input = cs2.id_sector)
-        where cs_ou.ano::int in (select max(ano::int) from cl_sector_exit_inputs )
-    ";
+                distinct
+                cs_ou.id_sector_exit,
+                cs1.name_sector as name_sector_exit,
+                cs_ou.id_sector_input,
+                cs2.name_sector as name_sector_input,
+                (((cs_ou.number_people::float)*100)/(select Sum(number_people::float) from cl_sector_exit_inputs )) as porcentaje,
+                cs_ou.ano
+            from cl_sector_exit_inputs cs_ou 
+            inner join cl_sectors cs1 on (cs_ou.id_sector_exit = cs1.id_sector)
+            inner join cl_sectors cs2 on (cs_ou.id_sector_input = cs2.id_sector)
+            where  cs_ou.id_sector_exit = ".$id_sector." and cs_ou.ano::int in (select max(ano::int) from cl_sector_exit_inputs )
+        ";*/
 
-    $rs = $wpdb->get_results($sql);
+        $sql = "
+            select 
+                distinct
+                cs_ou.id_sector_exit,
+                cs1.name_sector as name_sector_exit,
+                cs_ou.id_sector_input,
+                cs2.name_sector as name_sector_input,
+                (((cs_ou.number_people::float)*100)/(select Sum(number_people::float) from cl_sector_exit_inputs where id_sector_exit=".$id_sector.")) as porcentaje,
+                cs_ou.ano
+            from cl_sector_exit_inputs cs_ou 
+            inner join cl_sectors cs1 on (cs_ou.id_sector_exit = cs1.id_sector)
+            inner join cl_sectors cs2 on (cs_ou.id_sector_input = cs2.id_sector)
+            where cs_ou.id_sector_exit = ".$id_sector."
+            and cs_ou.ano in (select max(ano) from cl_sector_exit_inputs where id_sector_exit=".$id_sector.")
 
-    $data               = array();
-    $data_old           = array();
-    $data = array();
-    $rs_indefinidos     = array();
-    $ejeX               = array();
-    $datos_finles       = array();
-    //var_dump(count($rs)); die;
+        ";
 
-    if(is_array($rs) && count($rs)>0){
-        foreach ($rs as $row) {
-            $name_sector_exit  = isset($row->name_sector_exit)            && $row->name_sector_exit!=''      ?  $row->name_sector_exit : '';
-            $name_sector_input = isset($row->name_sector_input)           && $row->name_sector_input!=''     ?  $row->name_sector_input : '';
-            $porcentaje        = isset($row->porcentaje)                  && $row->porcentaje!=''            ?  (float) number_format($row->porcentaje, 2) : '';
-            $ano                = isset($row->ano)                        && $row->ano!=''                   ?  (float) $row->ano : '';
+        $rs = $wpdb->get_results($sql);
 
-            array_push($data, array('name' => $ano , 'from' => $name_sector_exit, 'to' => $name_sector_input, 'weight' => $porcentaje));
-            //array_push($data, array($ano , $name_sector_exit, $name_sector_input, $porcentaje));
+        $data               = array();
+        $data_old           = array();
+        $data = array();
+        $rs_indefinidos     = array();
+        $ejeX               = array();
+        $datos_finles       = array();
+        //var_dump(count($rs)); die;
+
+        if(is_array($rs) && count($rs)>0){
+            foreach ($rs as $row) {
+                $name_sector_exit  = isset($row->name_sector_exit)            && $row->name_sector_exit!=''      ?  $row->name_sector_exit : '';
+                $name_sector_input = isset($row->name_sector_input)           && $row->name_sector_input!=''     ?  $row->name_sector_input : '';
+                $porcentaje        = isset($row->porcentaje)                  && $row->porcentaje!=''            ?  (float) number_format($row->porcentaje, 2) : '';
+                $ano                = isset($row->ano)                        && $row->ano!=''                   ?  (float) $row->ano : '';
+
+                array_push($data, array('name' => $ano , 'from' => $name_sector_exit, 'to' => $name_sector_input, 'weight' => $porcentaje));
+                //array_push($data, array($ano , $name_sector_exit, $name_sector_input, $porcentaje));
+            }
+            $datos_finles = (array) array('ano' => $ano, 'data' => $data);
+
+            return new WP_REST_Response($datos_finles, 200);
+        }else{
+            return new WP_REST_Response(null, 200);
         }
-        $datos_finles = (array) array('ano' => $ano, 'data' => $data);
-
-        return new WP_REST_Response($datos_finles, 200);
     }else{
         return new WP_REST_Response(null, 200);
     }
+    
+    
 
 }
 
 add_action( 'rest_api_init', function () {
-    register_rest_route( 'wp/v2', '/crecimiento_rotacion_setores_dashboard/', array(
+    register_rest_route( 'wp/v2', '/crecimiento_rotacion_setores_dashboard/(?P<id_sector>\d+)', array(
         'methods' => 'GET',
-        'callback' => 'crecimiento_rotacion_setores_dashboard'
+        'callback' => 'crecimiento_rotacion_setores_dashboard',
+        'args' => array(
+            'id_sector' => array(
+                'validate_callback' => function($param, $request, $key) {
+                    return  is_numeric($param);
+                }
+            ),
+        ),
         
     ) );
 } );
@@ -1514,57 +1555,70 @@ function crecimiento_rotacion_setores_dashboard_old( $data ) {
 
     global $wpdb;
 
-    
+    $id_sector = isset($data['id_sector']) && $data['id_sector']!='' ? $data['id_sector'] : '';
 
-    
-    $sql = "
-        select 
-            distinct
-            cs_ou.id_sector_exit,
-            cs1.name_sector as name_sector_exit,
-            cs_ou.id_sector_input,
-            cs2.name_sector as name_sector_input,
-            (((cs_ou.number_people::float)*100)/(select Sum(number_people::float) from cl_sector_exit_inputs )) as porcentaje,
-            cs_ou.ano
-        from cl_sector_exit_inputs cs_ou 
-        inner join cl_sectors cs1 on (cs_ou.id_sector_exit = cs1.id_sector)
-        inner join cl_sectors cs2 on (cs_ou.id_sector_input = cs2.id_sector)
-        where cs_ou.ano::int in (select max(ano::int)-1 from cl_sector_exit_inputs )
-    ";
+    if(is_numeric($id_sector)){
+        $sql = "
+            
+            select 
+                distinct
+                cs_ou.id_sector_exit,
+                cs1.name_sector as name_sector_exit,
+                cs_ou.id_sector_input,
+                cs2.name_sector as name_sector_input,
+                (((cs_ou.number_people::float)*100)/(select Sum(number_people::float) from cl_sector_exit_inputs where id_sector_exit=".$id_sector.")) as porcentaje,
+                cs_ou.ano
+            from cl_sector_exit_inputs cs_ou 
+            inner join cl_sectors cs1 on (cs_ou.id_sector_exit = cs1.id_sector)
+            inner join cl_sectors cs2 on (cs_ou.id_sector_input = cs2.id_sector)
+            where cs_ou.id_sector_exit = ".$id_sector."
+            and cs_ou.ano in (select max(ano::int)-1 from cl_sector_exit_inputs where id_sector_exit=".$id_sector.")
+        ";
+        //echo $sql; die;
+        $rs = $wpdb->get_results($sql);
 
-    $rs = $wpdb->get_results($sql);
+        $data               = array();
+        $data_old           = array();
+        $data = array();
+        $rs_indefinidos     = array();
+        $ejeX               = array();
+        $datos_finles       = array();
+        //var_dump(count($rs)); die;
 
-    $data               = array();
-    $data_old           = array();
-    $data = array();
-    $rs_indefinidos     = array();
-    $ejeX               = array();
-    $datos_finles       = array();
-    //var_dump(count($rs)); die;
+        if(is_array($rs) && count($rs)>0){
+            foreach ($rs as $row) {
+                $name_sector_exit  = isset($row->name_sector_exit)            && $row->name_sector_exit!=''      ?  $row->name_sector_exit : '';
+                $name_sector_input = isset($row->name_sector_input)           && $row->name_sector_input!=''     ?  $row->name_sector_input : '';
+                $porcentaje        = isset($row->porcentaje)                  && $row->porcentaje!=''            ?  (float) number_format($row->porcentaje, 2) : '';
+                $ano                = isset($row->ano)                        && $row->ano!=''                   ?  (float) $row->ano : '';
 
-    if(is_array($rs) && count($rs)>0){
-        foreach ($rs as $row) {
-            $name_sector_exit  = isset($row->name_sector_exit)            && $row->name_sector_exit!=''      ?  $row->name_sector_exit : '';
-            $name_sector_input = isset($row->name_sector_input)           && $row->name_sector_input!=''     ?  $row->name_sector_input : '';
-            $porcentaje        = isset($row->porcentaje)                  && $row->porcentaje!=''            ?  (float) number_format($row->porcentaje, 2) : '';
-            $ano                = isset($row->ano)                        && $row->ano!=''                   ?  (float) $row->ano : '';
+                array_push($data, array('name' => $ano , 'from' => $name_sector_exit, 'to' => $name_sector_input, 'weight' => $porcentaje));
+                //array_push($data, array($ano , $name_sector_exit, $name_sector_input, $porcentaje));
+            }
+            $datos_finles = (array) array('ano' => $ano, 'data' => $data);
 
-            array_push($data, array('name' => $ano , 'from' => $name_sector_exit, 'to' => $name_sector_input, 'weight' => $porcentaje));
-            //array_push($data, array($ano , $name_sector_exit, $name_sector_input, $porcentaje));
+            return new WP_REST_Response($datos_finles, 200);
+        }else{
+            return new WP_REST_Response(null, 200);
         }
-        $datos_finles = (array) array('ano' => $ano, 'data' => $data);
-
-        return new WP_REST_Response($datos_finles, 200);
     }else{
         return new WP_REST_Response(null, 200);
     }
+    
 
 }
 
 add_action( 'rest_api_init', function () {
-    register_rest_route( 'wp/v2', '/crecimiento_rotacion_setores_dashboard_old/', array(
+    register_rest_route( 'wp/v2', '/crecimiento_rotacion_setores_dashboard_old/(?P<id_sector>\d+)', array(
         'methods' => 'GET',
-        'callback' => 'crecimiento_rotacion_setores_dashboard_old'
+        'callback' => 'crecimiento_rotacion_setores_dashboard_old',
+        'args' => array(
+            'id_sector' => array(
+                'validate_callback' => function($param, $request, $key) {
+                    return  is_numeric($param);
+                }
+            ),
+        ),
         
     ) );
 } );

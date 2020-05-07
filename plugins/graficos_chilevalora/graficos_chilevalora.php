@@ -179,7 +179,7 @@ function graphics1($id_graphics){
                                     text: 'Número de ocupados'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -214,12 +214,18 @@ function graphics1($id_graphics){
                                     categories: data.ejeX,
                                     title : {
                                         text: 'Sectores'
-                                    }
+                                    },
                                 },
                                 yAxis: {
                                     min: 0,
                                     title: {
                                         text: 'Número de ocupados'
+                                    },
+                                    labels: {
+                                        formatter: function() {
+                                         // if ( this.value > 100000 ) return Highcharts.numberFormat( this.value/1000, 1) + "l";  // maybe only switch if > 1000
+                                          return Highcharts.numberFormat(this.value,0);
+                                        }                
                                     }
                                 },
                                 tooltip: {
@@ -258,7 +264,7 @@ function graphics1($id_graphics){
                                     text: 'Número de ocupados'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -357,7 +363,7 @@ function graphics2($id_graphics){
                                     text: 'XX% de contratos indefinidos'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -435,7 +441,7 @@ function graphics2($id_graphics){
                                     text: 'XX% de contratos indefinidos'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -533,7 +539,7 @@ function graphics3($id_graphics){
                                     text: '% de contratos indefinidos'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -611,7 +617,7 @@ function graphics3($id_graphics){
                                     text: '% de contratos indefinidos'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -707,6 +713,9 @@ function graphics4($id_graphics){
 }
 
 function graphics5($id_graphics){
+	global $wpdb;
+
+	$cbSectorList = isset($_GET['cbSectorList']) && is_numeric($_GET['cbSectorList']) ? $_GET['cbSectorList'] : '0';
 	?>
 		<div class="col-12">
             <div class="bloque-grafica">
@@ -716,9 +725,56 @@ function graphics5($id_graphics){
 		    	</div>
                 <h2>XX% de rotación</h2>
                 <div class="grafica">
+                	<div class="row">
+                		<div class="col-12">
+
+                			<label class="col-3">Sector</label>
+                			<div class="col-9">
+                				<select name="cbSector" id="cbSector">
+                					<option value="0">Seleccione el sector a consultar</option>
+                					<?php 
+		                				$sql_sector = "
+						                    select 
+						                        cl_sectors.id_sector,
+						                        cl_sectors.name_sector
+						                    from cl_sectors 
+						                    order by cl_sectors.name_sector asc";
+						                $rs_sector  = $wpdb->get_results($sql_sector);
+						                if(is_array($rs_sector) && count($rs_sector)>0){
+		                        			foreach ($rs_sector as $row) {
+		                        				$id_sector      = isset($row->id_sector)      && $row->id_sector !=''    ? $row->id_sector : '';
+		                            			$name_sector    = isset($row->name_sector)    && $row->name_sector !=''  ? $row->name_sector : '';
+		                            				if($cbSectorList==$id_sector){
+		                            					?>
+				                            				<option value="<?php echo $id_sector; ?>" selected="selected"><?php echo $name_sector; ?></option>
+				                            			<?php
+		                            				}else{
+		                            					?>
+				                            				<option value="<?php echo $id_sector; ?>"><?php echo $name_sector; ?></option>
+				                            			<?php
+		                            				}
+		                        			}
+		                        		}
+		                			?>
+                				</select>
+                			</div>
+                		</div>
+                	</div>
                     <script>
+                    	jQuery(document).ready(function($) {
+                    		jQuery("#cbSector").change(function(event) {
+
+                    			var cbSector = jQuery(this).val();
+
+                    			var url      = window.location.href;
+
+                    			window.location = url+'&cbSectorList='+cbSector;
+                    		});
+                    	});
+
+
                         document.addEventListener('DOMContentLoaded', function () {
-                            Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_rotacion_setores_dashboard_old/', function (data) {
+                            Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_rotacion_setores_dashboard_old/<?php echo $cbSectorList; ?>', function (data) {
                                 var myChart7 = Highcharts.chart('chartdiv7old', {
                                 		chart: {
                                 			height : 900
@@ -727,7 +783,7 @@ function graphics5($id_graphics){
                                             text: 'XX% de rotación'
                                         },
                                         subtitle: {
-                                            text: 'Fuente: Gobierno de Chile'
+                                            // text: 'Fuente: Gobierno de Chile'
                                         },
                                         lang : {
                                             downloadCSV : 'Descargar CSV',
@@ -805,13 +861,13 @@ function graphics5($id_graphics){
                     <div id="chartdiv7old" class="chartdiv"></div>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_rotacion_setores_dashboard/', function (data) {
+                            Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_rotacion_setores_dashboard/<?php echo $cbSectorList; ?>', function (data) {
                                 var myChart7 = Highcharts.chart('chartdiv7', {
                                         title: {
                                             text: 'XX% de rotación'
                                         },
                                         subtitle: {
-                                            text: 'Fuente: Gobierno de Chile'
+                                            // text: 'Fuente: Gobierno de Chile'
                                         },
                                         lang : {
                                             downloadCSV : 'Descargar CSV',
@@ -921,7 +977,7 @@ function graphics6($id_graphics){
                                     text: 'XX% de nuevos trabajadores'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -999,7 +1055,7 @@ function graphics6($id_graphics){
                                     text: 'XX% de nuevos trabajadores'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1097,7 +1153,7 @@ function graphics7($id_graphics){
                                     text: '% de migrantes por sector'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1175,7 +1231,7 @@ function graphics7($id_graphics){
                                     text: '% de migrantes por sector'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1273,7 +1329,7 @@ function graphics8($id_graphics){
                                     text: '% de mujeres por sector'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1351,7 +1407,7 @@ function graphics8($id_graphics){
                                     text: '% de mujeres por sector'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1449,7 +1505,7 @@ function graphics9($id_graphics){
                                     text: 'Participación en distintos sectores'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1548,7 +1604,7 @@ function graphics10($id_graphics){
                                     text: 'Tasa de crecimiento de ocupados'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',
@@ -1626,7 +1682,7 @@ function graphics10($id_graphics){
                                     text: 'Tasa de crecimiento de ocupados'
                                 },
                                 subtitle: {
-                                    text: 'Fuente: Gobierno de Chile'
+                                    // text: 'Fuente: Gobierno de Chile'
                                 },
                                 lang : {
                                     downloadCSV : 'Descargar CSV',

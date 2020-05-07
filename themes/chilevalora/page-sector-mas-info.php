@@ -365,31 +365,51 @@
                 $graphics_1 = file_get_contents(get_site_url().'/wp-json/wp/v2/show_state_grafico/1');
                 if($graphics_1=='2'){
             ?>
+
                     <div class="col-12">
                         <div class="bloque-grafica">
                             <h2>Número de ocupados</h2>
                             <div class="grafica">
                                 <script>
                                     document.addEventListener('DOMContentLoaded', function () {
-                                        Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_sectores/<?php echo $id_sector; ?>', function (data) {
-                                            //console.log(data);
-                                            var data_sector = [];
-                                            var data_ejeX = [];
-                                            data_ejeX.push(parseInt(0));
-                                            for (var i = 0; i < data.length; i++) {
-                                                //console.log(data[i]);
-                                                data_sector.push(parseInt(data[i].number_workers));
-
-                                                data_ejeX.push(parseInt(data[i].ano));
+                                        
+                                        Highcharts.setOptions({
+                                            lang: {
+                                                months: [
+                                                    'Enero', 'Febrero', 'Marzo', 'Abril',
+                                                    'Mayo', 'Junio', 'Julio','Agosto', 
+                                                    'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                                                ],
+                                                weekdays: [
+                                                    'Domingo', 'Lunes', 'Martes', 'Miércoles',
+                                                    'Jueves', 'Viernes', 'Sábado'
+                                                ],
+                                                shortMonths: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                                                rangeFromTo: 'Desde: {rangeFrom} hasta {rangeTo}.',
                                             }
-                                            //console.log(data_ejeX);
-                                            var myChart2 = Highcharts.chart('chartdiv22', {
-                                                
-                                                title: {
-                                                    text: data[0].name_sector
+                                        });
+
+                                        Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_sectores/<?php echo $id_sector; ?>', function (data_json) {
+
+
+                                            var fecha = [];
+                                            for (var i = 0; i < data_json.length; i++) {
+                                                //console.log(data[i]);
+                                                var data_fortmat = new Array();
+                                                var format_fecha = Date.UTC(data_json[i].ano, data_json[i].mes,  1);
+                                                data_fortmat[0] = format_fecha;
+                                                data_fortmat[1] = data_json[i].value;
+
+                                                fecha.push(data_fortmat);
+                                            }
+
+                                            Highcharts.stockChart('chartdiv22', {
+                                                rangeSelector: {
+                                                    selected: 1
                                                 },
-                                                subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+
+                                                title: {
+                                                    text: data_json[0].name_sector
                                                 },
                                                 lang : {
                                                     downloadCSV : 'Descargar CSV',
@@ -399,7 +419,7 @@
                                                     downloadSVG : 'Descargar SVG',
                                                     downloadXLS : 'Descargar Excel',
                                                     printChart  : 'Imprimir Gráfico',
-                                                    viewData    : 'Ver Data'
+                                                    viewData    : 'Ver Data'                                            
                                                 },
                                                 exporting: {
                                                     buttons: {
@@ -417,40 +437,168 @@
                                                           'viewData'
                                                         ]
                                                       }
+                                                    },
+                                                    csv: {
+                                                        columnHeaderFormatter: function(item, key) {
+                                                            //console.log(key);
+                                                            if (key=='from') {
+                                                                return 'Sector desde'
+                                                            }
+                                                            if (key=='to') {
+                                                                return 'A sector'
+                                                            }
+                                                            if (key=='weight') {
+                                                                return '% Rotación'
+                                                            }
+                                                            return false
+                                                        }
                                                     }
 
                                                 },
-                                                xAxis: {
-                                                    categories: data_ejeX,
-                                                    title: {
-                                                        text: 'Años'
-                                                    }
-                                                },
                                                 yAxis: {
-                                                    type: 'logarithmic',
-                                                    minorTickInterval: 0.1,
-                                                    accessibility: {
-                                                        rangeDescription: 'Range: 0.1 to 1000'
-                                                    },
-                                                    title: {
-                                                        text: 'N° Ocupados'
+                                                    labels: {
+                                                        formatter: function() {
+                                                         // if ( this.value > 100000 ) return Highcharts.numberFormat( this.value/1000, 1) + "l";  // maybe only switch if > 1000
+                                                          return Highcharts.numberFormat(this.value,0);
+                                                        }                
                                                     }
                                                 },
-                                                tooltip:{
-                                                    formatter:function(){
-                                                        //console.log(this);
-                                                        return 'X = ' + this.key + ', Y =' + this.y;
-                                                    }
+
+                                                xAxis: {
+                                                    title: {
+                                                        text: 'Periodos'
+                                                    },
+                                                    rangeFromTo: 'Desde: {rangeFrom} hasta {rangeTo}.',
                                                 },
 
                                                 series: [{
-                                                    data: data_sector,
-                                                    color: '#7fbeda',
-                                                    pointStart: 1,
-                                                    name: 'Números de Ocupados'
+                                                    name: 'N° Ocupados',
+                                                    data: fecha,
+                                                    tooltip: {
+                                                        valueDecimals: 0
+                                                    }
                                                 }]
                                             });
                                         });
+
+                                        // Highcharts.getJSON('<?php echo get_site_url(); ?>/wp-json/wp/v2/crecimiento_sectores/<?php echo $id_sector; ?>', function (data_json) {
+
+                                        //     var fecha = [];
+                                        //     for (var i = 0; i < data_json.length; i++) {
+                                        //         //console.log(data[i]);
+                                        //         var data_fortmat = new Array();
+                                        //         var format_fecha = Date.UTC(data_json[i].ano, data_json[i].mes,  1);
+                                        //         data_fortmat[0] = format_fecha;
+                                        //         data_fortmat[1] = data_json[i].value;
+
+                                        //         fecha.push(data_fortmat);
+                                        //     }
+                                            
+                                        //     Highcharts.stockChart('chartdiv22', {
+                                        //         chart: {
+                                        //             type: 'spline'
+                                        //         },
+                                        //         title: {
+                                        //             text: data_json[0].name_sector
+                                        //         },
+                                        //         subtitle: {
+                                        //             //text: 'Irregular time data in Highcharts JS'
+                                        //         },
+                                        //         lang : {
+                                        //             downloadCSV : 'Descargar CSV',
+                                        //             downloadJPEG: 'Descargar JPEG',
+                                        //             downloadPDF : 'Descargar PDF',
+                                        //             downloadPNG : 'Descargar PNG',
+                                        //             downloadSVG : 'Descargar SVG',
+                                        //             downloadXLS : 'Descargar Excel',
+                                        //             printChart  : 'Imprimir Gráfico',
+                                        //             viewData    : 'Ver Data'                                            
+                                        //         },
+                                        //         exporting: {
+                                        //             buttons: {
+                                        //               contextButton: {
+                                        //                 menuItems: [
+                                        //                   'printChart',
+                                        //                   'separator',
+                                        //                   'downloadPNG',
+                                        //                   'downloadJPEG',
+                                        //                   'downloadPDF',
+                                        //                   'downloadSVG',
+                                        //                   'separator',
+                                        //                   'downloadCSV',
+                                        //                   'downloadXLS',
+                                        //                   'viewData'
+                                        //                 ]
+                                        //               }
+                                        //             }
+
+                                        //         },
+                                        //         xAxis: {
+                                        //             type: 'datetime',
+                                        //             dateTimeLabelFormats: { // don't display the dummy year
+                                        //                 month: '%b. %Y',
+                                        //                 year: '%Y'
+                                        //             },
+                                        //             title: {
+                                        //                 text: 'Date'
+                                        //             }
+                                        //         },
+                                        //         yAxis: {
+                                        //             title: {
+                                        //                 text: 'Snow depth (m)'
+                                        //             },
+                                        //             min: 0,
+                                        //             labels: {
+                                        //                 formatter: function() {
+                                        //                  // if ( this.value > 100000 ) return Highcharts.numberFormat( this.value/1000, 1) + "l";  // maybe only switch if > 1000
+                                        //                   return Highcharts.numberFormat(this.value,0);
+                                        //                 }                
+                                        //             }
+                                        //         },
+                                        //         tooltip: {
+                                        //             headerFormat: '<b>{series.name}</b><br>',
+                                        //             pointFormat: '{point.x:%e. %b}: {point.y:.0f}'
+                                        //         },
+                                        //         rangeSelector: {
+                                        //             selected: 1
+                                        //         },
+                                        //         plotOptions: {
+                                        //             series: {
+                                        //                 marker: {
+                                        //                     enabled: true
+                                        //                 }
+                                        //             }
+                                        //         },
+
+                                        //         //colors: ['#6CF', '#39F', '#06C', '#036', '#000'],
+
+                                        //         // Define the data points. All series have a dummy year
+                                        //         // of 1970/71 in order to be compared on the same x axis. Note
+                                        //         // that in JavaScript, months start at 0 for January, 1 for February etc.
+                                        //         series: [
+                                        //             {
+                                        //                 name: "N° Ocupados",
+                                        //                 data: fecha,
+                                        //             },
+                                        //         ],
+                                        //          responsive: {
+                                        //             rules: [{
+                                        //                 condition: {
+                                        //                     maxWidth: 500000
+                                        //                 },
+                                        //                 chartOptions: {
+                                        //                     plotOptions: {
+                                        //                         series: {
+                                        //                             marker: {
+                                        //                                 radius: 2.5
+                                        //                             }
+                                        //                         }
+                                        //                     }
+                                        //                 }
+                                        //             }]
+                                        //         }
+                                        //     });
+                                        // });
                                     });
                                 </script>
                                 <div id="chartdiv22" class="chartdiv"></div>
@@ -585,7 +733,7 @@
 
                                                 },
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
 
                                                 yAxis: {
@@ -606,16 +754,6 @@
                                                     align: 'right',
                                                     verticalAlign: 'middle'
                                                 },
-
-                                                // plotOptions: {
-                                                //     series: {
-                                                //         label: {
-                                                //             connectorAllowed: false
-                                                //         },
-                                                //         pointStart: data.ejeX[0]
-                                                //     }
-                                                // },
-
                                                 series: data.data_grafico,
                                                 
 
@@ -667,7 +805,7 @@
                                                 },
 
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
                                                 lang : {
                                                     downloadCSV : 'Descargar CSV',
@@ -882,7 +1020,7 @@
                                                         text: 'XX% de rotación'
                                                     },
                                                     subtitle: {
-                                                        text: 'Fuente: Gobierno de Chile'
+                                                        // text: 'Fuente: Gobierno de Chile'
                                                     },
                                                     lang : {
                                                         downloadCSV : 'Descargar CSV',
@@ -987,7 +1125,7 @@
                                                     text: 'XX% de nuevos trabajadores'
                                                 },
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
                                                 lang : {
                                                     downloadCSV : 'Descargar CSV',
@@ -1080,7 +1218,7 @@
                                                     text: '% de mujeres por subsector'
                                                 },
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
                                                 lang : {
                                                     downloadCSV : 'Descargar CSV',
@@ -1172,7 +1310,7 @@
                                                     text: '% de migrantes por subsector'
                                                 },
                                                 subtitle: {
-                                                    text: 'Fuente: Gobierno de Chile'
+                                                    // text: 'Fuente: Gobierno de Chile'
                                                 },
                                                 xAxis: {
                                                     categories: data.ejeX,

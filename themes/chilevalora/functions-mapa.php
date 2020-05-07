@@ -15,12 +15,15 @@ function digitales_json($data) {
     $rs_region = $wpdb->get_results($sql_region);
 
     $datos_finles = array();
-    $datos_value = array();
+    
+    $datos_region = array();
+    $datos_value  = array();
+
 
     if(is_array($rs_region) && count($rs_region)>0){
     	foreach ($rs_region as $row_region) {
 
-    		$id_region = isset($row_region->id_region) && $row_region->id_region!='' ? $row_region->id_region : '';
+    		$id_region = isset($row_region->id_region) && $row_region->id_region!='' ? (int) $row_region->id_region : '';
 
     		$sql = "
 		    	select
@@ -44,9 +47,11 @@ function digitales_json($data) {
 				order by cl_telefonica_digitales.id_region desc, cl_telefonica_digitales.value desc";
 		    //echo $sql;
 		    $rs = $wpdb->get_results($sql);
-
-		    $i=0;
+	   		
 		    
+	   		
+		    $i=0;
+		    $datos_value  = array();
 		    if(is_array($rs) && count($rs)>0){
 		    	$id_cabecera 		= isset($rs[0]->id) 	&& $rs[0]->id!='' 		? $rs[0]->id : '';
 		    	$title_cabecera 	= isset($rs[0]->title) 	&& $rs[0]->title!='' 	? $rs[0]->title : '';
@@ -54,24 +59,36 @@ function digitales_json($data) {
 		        foreach ($rs as $row) {
 		            $post_id            = isset($row->post_id)            && $row->post_id!=''              ? $row->post_id : '';
 		            $code_job_position  = isset($row->code_job_position)  && $row->code_job_position!=''    ? $row->code_job_position : '';
-		            $name  				= isset($row->name) 			  && $row->name!=''    				? $row->name : '';
+		            $name  				= isset($row->name) 			  && $row->name!=''    				? htmlentities($row->name) : '';
 		            $value  			= isset($row->value)  			  && $row->value!=''    			? (int) $row->value : '';
 		            $get_permalink      = get_permalink($post_id);
 		            $uri_occupation     = $get_permalink;
 
-		            array_push($datos_value, array('id' => $id_region, $name.'|'.$uri_occupation => $value));
+		            if($i==0){
+		            	$datos_value['id'] = $id_region;
+		            	$datos_value[$name.'|'.$uri_occupation] = $value;
+
+		            }else{
+
+		            	$datos_value[$name.'|'.$uri_occupation] = $value;
+		            }
 
 		            $i++;
 		        }
+		        $datos_region[] =  $datos_value;
 
-		        $datos_finles = array(
-		    		'id' => $id_cabecera,
-		    		'title' => $title_cabecera,
-		    		'values' => $datos_value
-		    	);
+		    	//array_push($datos_region, $datos_value);
+		    }else{
+		    	$datos_value['id'] = $id_region;
+		    	$datos_region[] =  $datos_value;
 		    }
     	}
     }
+    $datos_finles = array(
+		'id' => $id_cabecera,
+		'title' => $title_cabecera,
+		'values' => $datos_region
+	);
 
 
     return new WP_REST_Response($datos_finles, 200);
@@ -101,12 +118,14 @@ function nodigitales_json($data) {
     $rs_region = $wpdb->get_results($sql_region);
 
     $datos_finles = array();
-    $datos_value = array();
+    
+    $datos_region = array();
+    $datos_value  = array();
 
     if(is_array($rs_region) && count($rs_region)>0){
     	foreach ($rs_region as $row_region) {
 
-    		$id_region = isset($row_region->id_region) && $row_region->id_region!='' ? $row_region->id_region : '';
+    		$id_region = isset($row_region->id_region) && $row_region->id_region!='' ? (int) $row_region->id_region : '';
 
     		$sql = "
 		    	select
@@ -132,8 +151,10 @@ function nodigitales_json($data) {
 		    
 		    $rs = $wpdb->get_results($sql);
 
-		    $i=0;
+		    //var_dump($rs); die;
 		    
+		    $i=0;
+		    $datos_value  = array();
 		    if(is_array($rs) && count($rs)>0){
 		    	$id_cabecera 		= isset($rs[0]->id) 	&& $rs[0]->id!='' 		? $rs[0]->id : '';
 		    	$title_cabecera 	= isset($rs[0]->title) 	&& $rs[0]->title!='' 	? $rs[0]->title : '';
@@ -146,19 +167,34 @@ function nodigitales_json($data) {
 		            $get_permalink      = get_permalink($post_id);
 		            $uri_occupation     = $get_permalink;
 
-		            array_push($datos_value, array('id' => $id_region, $name.'|'.$uri_occupation => $value));
+		            //array_push($datos_value, array('id' => $id_region, $name.'|'.$uri_occupation => $value));
+		            //echo  $post_id.' '.$name;
+		            if($i==0){
+		            	$datos_value['id'] = $id_region;
+		            	$datos_value[$name.'|'.$uri_occupation] = $value;
+
+		            }else{
+
+		            	$datos_value[$name.'|'.$uri_occupation] = $value;
+		            }
 
 		            $i++;
 		        }
+		        $datos_region[] =  $datos_value;
 
-		        $datos_finles = array(
-		    		'id' => $id_cabecera,
-		    		'title' => $title_cabecera,
-		    		'values' => $datos_value
-		    	);
+		    }else{
+		    	//echo 'hola'; die;
+		    	$datos_value['id'] = $id_region;
+		    	$datos_region[] =  $datos_value;
 		    }
     	}
     }
+
+    $datos_finles = array(
+		'id' => $id_cabecera,
+		'title' => $title_cabecera,
+		'values' => $datos_region
+	);
 
 
     return new WP_REST_Response($datos_finles, 200);
@@ -187,12 +223,15 @@ function habilidades_json($data) {
     $rs_region = $wpdb->get_results($sql_region);
 
     $datos_finles = array();
-    $datos_value = array();
+    
+    $datos_region = array();
+    $datos_value  = array();
+
 
     if(is_array($rs_region) && count($rs_region)>0){
     	foreach ($rs_region as $row_region) {
 
-    		$id_region = isset($row_region->id_region) && $row_region->id_region!='' ? $row_region->id_region : '';
+    		$id_region = isset($row_region->id_region) && $row_region->id_region!='' ? (int) $row_region->id_region : '';
 
     		$sql = "
     			select
@@ -220,7 +259,7 @@ inner join cl_job_positions on (cl_job_positions_knowledges_offers.code_job_posi
 		    $rs = $wpdb->get_results($sql);
 
 		    $i=0;
-		    
+		    $datos_value  = array();
 		    if(is_array($rs) && count($rs)>0){
 		    	$id_cabecera 		= isset($rs[0]->id) 	&& $rs[0]->id!='' 		? $rs[0]->id : '';
 		    	$title_cabecera 	= isset($rs[0]->title) 	&& $rs[0]->title!='' 	? $rs[0]->title : '';
@@ -233,20 +272,29 @@ inner join cl_job_positions on (cl_job_positions_knowledges_offers.code_job_posi
 		            $get_permalink      = get_permalink($post_id);
 		            $uri_occupation     = $get_permalink;
 
-		            array_push($datos_value, array('id' => $id_region, $name.'|'.$uri_occupation => $value));
+		            //array_push($datos_value, array('id' => $id_region, $name.'|'.$uri_occupation => $value));
+
+		            if($i==0){
+		            	$datos_value['id'] = $id_region;
+		            	$datos_value[$name.'|'.$uri_occupation] = $value;
+
+		            }else{
+
+		            	$datos_value[$name.'|'.$uri_occupation] = $value;
+		            }
 
 		            $i++;
 		        }
-
-		        $datos_finles = array(
-		    		'id' => $id_cabecera,
-		    		'title' => $title_cabecera,
-		    		'values' => $datos_value
-		    	);
+		        $datos_region[] =  $datos_value;
 		    }
     	}
     }
 
+    $datos_finles = array(
+		'id' => $id_cabecera,
+		'title' => $title_cabecera,
+		'values' => $datos_region
+	);
 
     return new WP_REST_Response($datos_finles, 200);
 }
